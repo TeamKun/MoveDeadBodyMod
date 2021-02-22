@@ -1,4 +1,5 @@
-﻿using BepInEx;
+﻿using System.Collections.Generic;
+using BepInEx;
 using BepInEx.Configuration;
 using BepInEx.IL2CPP;
 using HarmonyLib;
@@ -19,7 +20,7 @@ namespace moveDeadBodiesMod
 
         public override void Load()
         {
-            Name = Config.Bind("Fake", "Name", ":>");
+            //Name = Config.Bind("Fake", "Name", ":>");
 
             Harmony.PatchAll();
         }
@@ -29,7 +30,12 @@ namespace moveDeadBodiesMod
         {
             public static void Postfix(PlayerControl __instance)
             {
-                __instance.nameText.Text = PluginSingleton<MoveDeadBodyMod>.Instance.Name.Value;
+                //__instance.nameText.Text = PluginSingleton<MoveDeadBodyMod>.Instance.Name.Value;
+                
+                if (!Extensions.impoCarries.ContainsKey(__instance.PlayerId))
+                {
+                    Extensions.impoCarries.Add(__instance.PlayerId , new List<DeadBody>());
+                }
             }
         }
     }

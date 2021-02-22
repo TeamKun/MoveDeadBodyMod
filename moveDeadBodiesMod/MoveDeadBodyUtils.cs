@@ -8,30 +8,28 @@ using UnityEngine;
 
 namespace moveDeadBodiesMod
 {
-
-    [HarmonyPatch]
     public static class MoveDeadBodyUtils
     {
-        public static AssetBundle bundle = AssetBundle.LoadFromFile(Directory.GetCurrentDirectory() + "\\Assets\\moveBundle");
+        public static AssetBundle bundle = AssetBundle.LoadFromFile(Directory.GetCurrentDirectory() + "\\Assets\\movebundle");
 
         public static Sprite carryButton = bundle.LoadAsset<Sprite>("CB").DontUnload();
+        public static Sprite dropButton = bundle.LoadAsset<Sprite>("DB").DontUnload();
 
         public static int carryCount = 3;
-
         public static DeadBody GetClosestDeadBody()
         {
             double mindist = double.MaxValue;
             DeadBody closestDeadBody = null;
-            DeadBody[] array = Object.FindObjectsOfType<DeadBody>();
-
-            if (array.Length == 0)
-            {
-                return closestDeadBody;
-            }
+            var array = Object.FindObjectsOfType<DeadBody>();
 
             foreach (DeadBody deadBody in array)
             {
-                double dist = GetDistBetweenPlayerAndDeadBody(PlayerControl.LocalPlayer, deadBody);
+                if (Extensions.IsDeadBodyCarried(deadBody))
+                {
+                    continue;
+                }
+                
+                double dist = Vector2.Distance(PlayerControl.LocalPlayer.GetTruePosition(), deadBody.transform.position);
 
                 if (dist < mindist)
                 {
@@ -41,11 +39,6 @@ namespace moveDeadBodiesMod
             }
 
             return closestDeadBody;
-        }
-
-        private static double GetDistBetweenPlayerAndDeadBody(PlayerControl player, DeadBody deadBody)
-        {
-            return Vector2.Distance(player.GetTruePosition(), deadBody.TruePosition);
         }
     }
 }
