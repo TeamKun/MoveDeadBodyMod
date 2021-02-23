@@ -16,6 +16,7 @@ namespace moveDeadBodiesMod
         public static Sprite dropButton = bundle.LoadAsset<Sprite>("DB").DontUnload();
 
         public static int carryCount = 3;
+        public static float speed = float.MaxValue;
         public static DeadBody GetClosestDeadBody()
         {
             double mindist = double.MaxValue;
@@ -37,7 +38,6 @@ namespace moveDeadBodiesMod
                     closestDeadBody = deadBody;
                 }
             }
-
             return closestDeadBody;
         }
     }

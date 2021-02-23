@@ -38,7 +38,7 @@ namespace moveDeadBodiesMod
         {
             static void Postfix(VersionShower __instance)
             {
-                __instance.text.Text = __instance.text.Text + "   Plugin ver." + 1.0 + " Loaded. (twitter.com/nier_Automatan)";
+                __instance.text.Text = __instance.text.Text + MoveDeadBodyMod.ModName + " ver." + MoveDeadBodyMod.ModVersion + " Loaded. Author:(twitter.com/nier_Automatan)";
             }
         }
         

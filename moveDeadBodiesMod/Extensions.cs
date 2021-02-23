@@ -10,6 +10,34 @@ namespace moveDeadBodiesMod
 {
     public static class Extensions
     {
+        public static int getId(this DeadBody body)
+        {
+            if (!deadBodyIds.ContainsKey(body))
+            {
+                return Int32.MaxValue;
+            }
+            
+            return deadBodyIds[body];
+        }
+        public static void setId(this DeadBody body)
+        {
+            if (!deadBodyIds.Values.Contains(body.getId()))
+            {
+                deadBodyIds.Add(body, getAvailableId());
+            }
+        }
+
+        public static int getAvailableId()
+        {
+            int id = 0;
+
+            for (int i = 0; i < deadBodyIds.Count; i++)
+            {
+                id++;
+            }
+
+            return id;
+        }
         public static bool IsPlayerCarry(byte playerId)
         {
             PlayerControl plr = getPlayerById(playerId);
@@ -31,53 +59,27 @@ namespace moveDeadBodiesMod
                     return player;
                 }
             }
-
             return null;
         }
 
+        public static DeadBody getDeadBodyById(byte id)
+        {
+            foreach (var deadBody in Object.FindObjectsOfType<DeadBody>())
+            {
+                if (deadBody.ParentId == id)
+                {
+                    return deadBody;
+                }
+            }
+            return null;
+        }
         public static int getCarringCount(this PlayerControl plr)
         {
             return impoCarries[plr.PlayerId].Count;
         }
-        
-        public static int GetId(this DeadBody deadBody)
-        {
-            if (!deadBodyIds.ContainsKey(deadBody))
-            {
-                return Int32.MaxValue;
-            }
-            else
-            {
-                return deadBodyIds[deadBody];
-            }
-                
-        }
-
-        public static void SetId(this DeadBody deadBody)
-        {
-            if (deadBodyIds.ContainsKey(deadBody))
-            {
-                deadBodyIds.Remove(deadBody);
-            }
-            
-            deadBodyIds.Add(deadBody , GetAvailableId());
-        }
-
-        public static int GetAvailableId()
-        {
-            DeadBody[] array = Object.FindObjectsOfType<DeadBody>();
-            int id = 0;
-            for (int i = 0; i < array.Length; i++)
-            {
-                id++;
-            }
-
-            return id;
-        }
 
         public static bool IsDeadBodyCarried(DeadBody deadBody)
         {
-
             foreach (List<DeadBody> deadBodies in impoCarries.Values)
             {
                 foreach (DeadBody dB in deadBodies)
@@ -104,32 +106,13 @@ namespace moveDeadBodiesMod
             }
 
             impoCarries[impostor.PlayerId].Add(deadBody);
-            RegisterDeadBodyId(deadBody);
-            
-        }
-        
-        
-         private static void RegisterDeadBodyId(DeadBody deadBody)
-        {
-            if (!deadBodyIds.ContainsKey(deadBody))
-            {
-                deadBodyIds.Add(deadBody , GetAvailableId());
-            }
-        }
-    
 
+        }
         public static void SetTarget(KillButtonManager killButtonManager, DeadBody target)
         {
-            
-            /*
-            if (buttonTargets.ContainsKey(killButtonManager) && buttonTargets[killButtonManager] != target)
-            {
-                buttonTargets[killButtonManager].GetComponent<SpriteRenderer>().material.SetFloat("_Outline" , 0f);
-            }
-            */
             if (target == null) return;
 
-            if (Vector2.Distance(PlayerControl.LocalPlayer.GetTruePosition(), target.transform.position) <= 3)
+            if (Vector2.Distance(PlayerControl.LocalPlayer.GetTruePosition(), target.transform.position) <= 1)
             {
                 buttonTargets[killButtonManager] = target;
             }
@@ -141,19 +124,16 @@ namespace moveDeadBodiesMod
                 buttonTargets[killButtonManager] = null;
             }
             
-            if (buttonTargets[killButtonManager] != null)
+            if(buttonTargets[killButtonManager] != null)
             {
                 SpriteRenderer component = target.GetComponent<SpriteRenderer>();
                 component.material.SetFloat("_Outline" , 1f);
                 component.material.SetColor("_OutlineColor" , Color.green);
             }
-
         }
 
         public static IDictionary<byte, List<DeadBody>> impoCarries = new Dictionary<byte, List<DeadBody>>();
-
-        private static IDictionary<DeadBody, int> deadBodyIds = new Dictionary<DeadBody, int>();
-
+        public static IDictionary<DeadBody, int> deadBodyIds = new Dictionary<DeadBody, int>();
         public static IDictionary<KillButtonManager, DeadBody> buttonTargets = new Dictionary<KillButtonManager, DeadBody>();
 
     }

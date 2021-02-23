@@ -7,12 +7,14 @@ using Reactor;
 
 namespace moveDeadBodiesMod
 {
-    [BepInPlugin(Id)]
+    [BepInPlugin(Id , ModName , ModVersion)]
     [BepInProcess("Among Us.exe")]
     [BepInDependency(ReactorPlugin.Id)]
     public class MoveDeadBodyMod : BasePlugin
     {
         public const string Id = "com.gmail.tomatan515";
+        public const string ModName = "MoveDeadBodyMod";
+        public const string ModVersion = "1.0";
 
         public Harmony Harmony { get; } = new Harmony(Id);
 
@@ -20,23 +22,7 @@ namespace moveDeadBodiesMod
 
         public override void Load()
         {
-            //Name = Config.Bind("Fake", "Name", ":>");
-
             Harmony.PatchAll();
-        }
-
-        [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.FixedUpdate))]
-        public static class ExamplePatch
-        {
-            public static void Postfix(PlayerControl __instance)
-            {
-                //__instance.nameText.Text = PluginSingleton<MoveDeadBodyMod>.Instance.Name.Value;
-                
-                if (!Extensions.impoCarries.ContainsKey(__instance.PlayerId))
-                {
-                    Extensions.impoCarries.Add(__instance.PlayerId , new List<DeadBody>());
-                }
-            }
         }
     }
 }

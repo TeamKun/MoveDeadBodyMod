@@ -1,10 +1,13 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using HarmonyLib;
+using Hazel;
 using Reactor.Extensions;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
 using UnityEngine.Windows.WebCam;
+using Object = UnityEngine.Object;
 
 namespace moveDeadBodiesMod
 {
@@ -12,9 +15,9 @@ namespace moveDeadBodiesMod
     {
         public static List<CarryButton> AllButtons = new List<CarryButton>();
         private readonly HudManager _hudManager;
-        public KillButtonManager buttonManager;
+        public KillButtonManager ButtonManager;
 
-        public float MaxTimer = 15;
+        public float MaxTimer = 3;
         private float timer;
 
         public CarryButton(HudManager hudManager)
@@ -22,63 +25,63 @@ namespace moveDeadBodiesMod
             _hudManager = hudManager;
             AllButtons.Add(this);
             onStart();
-            buttonManager.gameObject.SetActive(true);
-            System.Console.WriteLine("Generated.");
+            ButtonManager.gameObject.SetActive(false);
         }
         
         void onStart()
         {
-            buttonManager = GameObject.Instantiate(_hudManager.KillButton, _hudManager.transform);
-            buttonManager.renderer.sprite = MoveDeadBodyUtils.carryButton;
-            buttonManager.SetCoolDown(timer , MaxTimer);
+            ButtonManager = GameObject.Instantiate(_hudManager.KillButton, _hudManager.transform);
+            ButtonManager.renderer.sprite = MoveDeadBodyUtils.carryButton;
+            ButtonManager.SetCoolDown(timer , MaxTimer);
             timer = MaxTimer;
-            buttonManager.renderer.SetCooldownNormalizedUvs();
-            Extensions.SetTarget(buttonManager , null);
-            
-            buttonManager.GetComponent<PassiveButton>().OnClick.AddListener((UnityAction) OnClick);
-
+            ButtonManager.renderer.SetCooldownNormalizedUvs();
+            Extensions.SetTarget(ButtonManager , null);
+            ButtonManager.GetComponent<PassiveButton>().OnClick.AddListener((UnityAction) OnClick);
             void OnClick()
             {
-                PlayerControl.LocalPlayer.SetColor(3);
                 if (CanUse())
                 {
-                    Use(Extensions.buttonTargets[buttonManager]);
+                    Use(Extensions.buttonTargets[ButtonManager]);
                     timer = MaxTimer;
                 }
             }
         }
-
         void OnUpdate()
         {
-            buttonManager.transform.localPosition = buttonManager.transform.localPosition = new Vector3(
+            ButtonManager.transform.localPosition = new Vector3(
                     (_hudManager.UseButton.transform.localPosition.x) * -1,
                     _hudManager.UseButton.transform.localPosition.y, _hudManager.KillButton.transform.localPosition.z) +
                 new Vector3(0.2f, 0.2f);
 
+            if (!PlayerControl.LocalPlayer.Data.IsDead && PlayerControl.LocalPlayer.Data.IsImpostor)
+            {
+                ButtonManager.gameObject.SetActive(true);
+            }
+
             if (timer > 0)
             {
                 timer -= Time.deltaTime;
-                buttonManager.SetCoolDown(timer , MaxTimer);
+                ButtonManager.SetCoolDown(timer , MaxTimer);
             }
             
-            if (!Extensions.buttonTargets.ContainsKey(buttonManager))
+            if (!Extensions.buttonTargets.ContainsKey(ButtonManager))
             {
-                Extensions.buttonTargets.Add(buttonManager , null);
+                Extensions.buttonTargets.Add(ButtonManager , null);
             }
 
-            Extensions.SetTarget(buttonManager , MoveDeadBodyUtils.GetClosestDeadBody());
+            Extensions.SetTarget(ButtonManager , MoveDeadBodyUtils.GetClosestDeadBody());
 
             if (CanUse())
             {
-                buttonManager.renderer.color = Palette.EnabledColor;
-                buttonManager.renderer.material.SetFloat("_Desat", 0f);
+                ButtonManager.renderer.color = Palette.EnabledColor;
+                ButtonManager.renderer.material.SetFloat("_Desat", 0f);
             }
             else
             {
-                buttonManager.renderer.color = new Color(1f, 1f, 1f, 0.3f);
-                buttonManager.renderer.material.SetFloat("_Desat", 1f);
+                ButtonManager.renderer.color = new Color(1f, 1f, 1f, 0.3f);
+                ButtonManager.renderer.material.SetFloat("_Desat", 1f);
             }
-
+            
             foreach (byte playerId in Extensions.impoCarries.Keys)
             {
                 PlayerControl player = Extensions.getPlayerById(playerId);
@@ -87,6 +90,11 @@ namespace moveDeadBodiesMod
                 for (int i = 0; i < deadBodies.Count; i++)
                 {
                     deadBodies[i].transform.position = new Vector2(player.GetTruePosition().x , player.GetTruePosition().y + 1 + i*(0.3F));
+                    
+                    var w = AmongUsClient.Instance.StartRpc(player.NetId, (byte) 45, SendOption.Reliable); 
+                    w.Write(deadBodies[i].ParentId);
+                    w.Write(i);
+                    w.EndMessage();
                 }
             }
         }
@@ -98,7 +106,7 @@ namespace moveDeadBodiesMod
             bool canUse = localPlayer.Data.IsImpostor && !localPlayer.Data.IsDead;
             canUse &= Extensions.getCarringCount(localPlayer) < MoveDeadBodyUtils.carryCount;
 
-            DeadBody target = Extensions.buttonTargets[buttonManager];
+            DeadBody target = Extensions.buttonTargets[ButtonManager];
 
             if (target != null)
             {
@@ -111,7 +119,7 @@ namespace moveDeadBodiesMod
 
             float num = Vector2.Distance(localPlayer.GetTruePosition() , target.transform.position);
 
-            canUse &= num <= 3;
+            canUse &= num <= 1;
             
             return canUse && (timer < 0);
 
@@ -121,6 +129,12 @@ namespace moveDeadBodiesMod
         {
             PlayerControl localPlayer = PlayerControl.LocalPlayer;
             Extensions.CarryBody(localPlayer , deadBody);
+
+            var w = AmongUsClient.Instance.StartRpc(localPlayer.NetId, (byte) 45, SendOption.Reliable); 
+            w.Write(deadBody.ParentId);
+            w.Write(3);
+            w.EndMessage();
+            
         }
 
         //HudManager -> server用
@@ -131,16 +145,17 @@ namespace moveDeadBodiesMod
             {
                 try
                 {
-                    AllButtons.RemoveAll(item => item.buttonManager == null);
+                    AllButtons.RemoveAll(item => item.ButtonManager == null);
 
                     foreach (var button in AllButtons)
                     {
                         button.OnUpdate();
                     }
+
                 }
                 catch
                 {
-                    
+                    //System.Console.WriteLine("CarryButton processing was failed.");
                 }
 
             }
