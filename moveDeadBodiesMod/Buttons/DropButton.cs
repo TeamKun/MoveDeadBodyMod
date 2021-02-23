@@ -76,7 +76,7 @@ namespace moveDeadBodiesMod
         }
         bool CanUse()
         {
-            return Extensions.IsPlayerCarry(PlayerControl.LocalPlayer.PlayerId);
+            return Extensions.IsPlayerCarry(PlayerControl.LocalPlayer.PlayerId) && timer < 0 ;
         }
 
         void Use()
