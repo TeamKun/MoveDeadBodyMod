@@ -56,6 +56,11 @@ namespace moveDeadBodiesMod
                 ButtonManager.gameObject.SetActive(true);
             }
 
+            if (Extensions.IsPlayerCarry(PlayerControl.LocalPlayer.PlayerId) && PlayerControl.LocalPlayer.inVent)
+            {
+                Use();
+            }
+
             if (timer > 0)
             {
                 timer -= Time.deltaTime;
@@ -87,6 +92,8 @@ namespace moveDeadBodiesMod
             for (int i = 0; i < deadBodies.Count; i++)
             {
                 deadBodies[i].transform.position = new Vector2(player.GetTruePosition().x , player.GetTruePosition().y + i*0.3F);
+                Rigidbody2D rb = deadBodies[i].GetComponent<Rigidbody2D>();
+                rb.Destroy();
                 var w = AmongUsClient.Instance.StartRpc(player.NetId, (byte) 44, SendOption.Reliable); 
                 w.Write(deadBodies[i].ParentId);
                 w.Write(i);

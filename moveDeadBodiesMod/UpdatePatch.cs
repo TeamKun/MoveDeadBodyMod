@@ -30,6 +30,7 @@ namespace moveDeadBodiesMod
             static void Postfix(ref GameOptionsMenu __instance)
             {
                 __instance.GetComponentInParent<Scroller>().YBounds.max = 13.5f;
+                
             }
         }
         
@@ -38,7 +39,7 @@ namespace moveDeadBodiesMod
         {
             static void Postfix(VersionShower __instance)
             {
-                __instance.text.Text = __instance.text.Text + MoveDeadBodyMod.ModName + " ver." + MoveDeadBodyMod.ModVersion + " Loaded. Author:(twitter.com/nier_Automatan)";
+                __instance.text.Text = __instance.text.Text + MoveDeadBodyMod.ModName + " ver." + MoveDeadBodyMod.ModVersion + " loaded. Author:(twitter.com/nier_Automatan)";
             }
         }
         

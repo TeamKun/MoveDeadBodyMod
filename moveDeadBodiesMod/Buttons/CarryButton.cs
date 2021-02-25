@@ -89,12 +89,36 @@ namespace moveDeadBodiesMod
 
                 for (int i = 0; i < deadBodies.Count; i++)
                 {
-                    deadBodies[i].transform.position = new Vector2(player.GetTruePosition().x , player.GetTruePosition().y + 1 + i*(0.3F));
+                    //deadBodies[i].transform.position = new Vector2(player.GetTruePosition().x , player.GetTruePosition().y + 1 + i*(0.3F));
+
+                    if (i == 0)
+                    {
+                        Vector2 force = new Vector2(player.GetTruePosition().x - deadBodies[i].transform.position.x , 
+                            player.GetTruePosition().y - deadBodies[i].transform.position.y) * 8;
+
+                        deadBodies[i].gameObject.AddComponent<Rigidbody2D>();
+                        Rigidbody2D rb = deadBodies[i].gameObject.GetComponent<Rigidbody2D>();
+                        rb.velocity = force;
+                        var w = AmongUsClient.Instance.StartRpc(player.NetId, (byte) 45, SendOption.Reliable); 
+                        w.Write(deadBodies[i].ParentId);
+                        w.Write(i);
+                        w.EndMessage();
+                        continue;
+                    }
+
+                    Vector2 force1 = new Vector2(
+                        deadBodies[i - 1].transform.position.x - deadBodies[i].transform.position.x,
+                        deadBodies[i - 1].transform.position.y - deadBodies[i].transform.position.y) * 8;
+
+                    deadBodies[i].gameObject.AddComponent<Rigidbody2D>();
+                    Rigidbody2D rb1 = deadBodies[i].gameObject.GetComponent<Rigidbody2D>();
+                    rb1.velocity = force1;
+                    var w1 = AmongUsClient.Instance.StartRpc(player.NetId, (byte) 45, SendOption.Reliable); 
+                    w1.Write(deadBodies[i].ParentId);
+                    w1.Write(i);
+                    w1.EndMessage();
+                    return;
                     
-                    var w = AmongUsClient.Instance.StartRpc(player.NetId, (byte) 45, SendOption.Reliable); 
-                    w.Write(deadBodies[i].ParentId);
-                    w.Write(i);
-                    w.EndMessage();
                 }
             }
         }
@@ -104,7 +128,7 @@ namespace moveDeadBodiesMod
             PlayerControl localPlayer = PlayerControl.LocalPlayer;
 
             bool canUse = localPlayer.Data.IsImpostor && !localPlayer.Data.IsDead;
-            canUse &= Extensions.getCarringCount(localPlayer) < MoveDeadBodyUtils.carryCount;
+            canUse &= Extensions.getCarringCount(localPlayer) < 2;
 
             DeadBody target = Extensions.buttonTargets[ButtonManager];
 
