@@ -4,7 +4,8 @@ namespace moveDeadBodiesMod
 {
     public class UpdatePatch
     {
-        [HarmonyPatch(typeof(GameOptionsData), nameof(GameOptionsData.Method_24))]
+        /*
+                 [HarmonyPatch(typeof(GameOptionsData), nameof(GameOptionsData.Method_24))]
         class GameOptionsData_ToHudString
         {
             static void Postfix(ref string __result)
@@ -12,7 +13,8 @@ namespace moveDeadBodiesMod
                 DestroyableSingleton<HudManager>.Instance.GameSettings.scale = 0.5f;
             }
         }
-        
+         */
+
         private static float defaultBounds = 0f;
 
         [HarmonyPatch(typeof(GameOptionsMenu), nameof(GameOptionsMenu.Start))]
@@ -39,7 +41,7 @@ namespace moveDeadBodiesMod
         {
             static void Postfix(VersionShower __instance)
             {
-                __instance.text.Text = __instance.text.Text + MoveDeadBodyMod.ModName + " ver." + MoveDeadBodyMod.ModVersion + " loaded. Author:(twitter.com/nier_Automatan)";
+                __instance.text.text = __instance.text.text + MoveDeadBodyMod.ModName + " ver." + MoveDeadBodyMod.ModVersion + " loaded. Author:(twitter.com/nier_Automatan)";
             }
         }
         

@@ -48,6 +48,9 @@ namespace moveDeadBodiesMod
         
         void OnUpdate()
         {
+
+            ButtonManager.renderer.sprite = MoveDeadBodyUtils.dropButton;
+
             ButtonManager.transform.localPosition = new Vector3(_hudManager.ReportButton.transform.localPosition.x * -1,
                 _hudManager.ReportButton.transform.localPosition.y, _hudManager.ReportButton.transform.localPosition.z) + new Vector3(0.2f, 0.2f);
 
@@ -106,7 +109,8 @@ namespace moveDeadBodiesMod
         [HarmonyPatch(typeof(HudManager), nameof(HudManager.Update))]
         static class HudManagerPatch
         {
-            static void Prefix()
+
+            static void Postfix()
             {
                 try
                 {
